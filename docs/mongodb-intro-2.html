@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MongoDB vs SQL – Restaurant Edition</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: radial-gradient(circle at top, #1f2933 0, #111827 45%, #020617 100%);
+      color: #e5e7eb;
+      min-height: 100vh;
+    }
+    a { color: #38bdf8; }
+    .page {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 260px;
+      background: linear-gradient(180deg, #020617, #020617e6);
+      border-right: 1px solid #1e293b;
+      padding: 20px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .logo {
+      font-weight: 700;
+      font-size: 1.2rem;
+      margin-bottom: 4px;
+    }
+    .logo span { color: #22c55e; }
+    .tagline { font-size: 0.8rem; color: #9ca3af; margin-bottom: 20px; }
+    .nav-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: #6b7280; margin: 14px 0 8px; }
+    .nav-list { list-style: none; }
+    .nav-link {
+      font-size: 0.9rem;
+      padding: 7px 8px;
+      border-radius: 6px;
+      color: #e5e7eb;
+      cursor: pointer;
+      display: block;
+      border-left: 3px solid transparent;
+    }
+    .nav-link:hover { background: #0f172a; border-left-color: #22c55e; }
+    .nav-link.active { background: #0f172a; border-left-color: #22c55e; color: #bbf7d0; }
+
+    .content-wrap { flex: 1; padding: 28px 28px 60px; overflow-y: auto; }
+    .hero {
+      background: radial-gradient(circle at top left, #22c55e20 0, #020617 60%);
+      border-radius: 16px;
+      border: 1px solid #1e293b;
+      padding: 22px 22px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: center;
+    }
+    .hero-main h1 { font-size: 1.7rem; margin-bottom: 6px; }
+    .hero-main p { font-size: 0.95rem; color: #9ca3af; }
+    .hero-badge-row { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .badge {
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid #334155;
+      background: #02061799;
+      color: #9ca3af;
+    }
+    .hero-diagram {
+      font-size: 0.75rem;
+      background: #020617dd;
+      border-radius: 12px;
+      border: 1px solid #1e293b;
+      padding: 10px 12px;
+      width: 220px;
+    }
+    .hero-diagram-title { font-size: 0.7rem; text-transform: uppercase; color: #6b7280; margin-bottom: 4px; }
+    .diagram-cols { display: flex; gap: 6px; }
+    .diagram-box {
+      flex: 1;
+      background: #020617;
+      border-radius: 8px;
+      padding: 6px;
+      border: 1px solid #1f2937;
+    }
+    .diagram-label { font-size: 0.65rem; text-transform: uppercase; color: #9ca3af; margin-bottom: 3px; }
+    .diagram-body { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 0.65rem; color: #e5e7eb; white-space: pre; }
+
+    section { margin-bottom: 26px; }
+    h2 { font-size: 1.2rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    h2 span.icon { font-size: 1.1rem; }
+    p { font-size: 0.9rem; color: #d1d5db; margin-bottom: 8px; }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .card {
+      background: #020617e6;
+      border-radius: 10px;
+      border: 1px solid #1f2937;
+      padding: 10px 12px;
+    }
+    .card-title { font-size: 0.95rem; margin-bottom: 4px; }
+    .card-sub { font-size: 0.8rem; color: #9ca3af; margin-bottom: 6px; }
+    .chip-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+    .chip {
+      font-size: 0.7rem;
+      padding: 2px 7px;
+      border-radius: 999px;
+      border: 1px solid #374151;
+      color: #9ca3af;
+    }
+
+    .compare-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
+    .compare-table th, .compare-table td { border: 1px solid #1f2937; padding: 8px 9px; vertical-align: top; }
+    .compare-table th { background: #020617; color: #9ca3af; font-weight: 500; }
+    .compare-table td label { font-size: 0.75rem; color: #9ca3af; text-transform: uppercase; display: block; margin-bottom: 3px; }
+
+    pre { background: #020617; border-radius: 8px; padding: 10px 11px; border: 1px solid #1f2937; overflow-x: auto; font-size: 0.8rem; line-height: 1.5; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; }
+
+    .pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; }
+    .pill { font-size: 0.75rem; padding: 2px 8px; border-radius: 999px; border: 1px solid #334155; color: #9ca3af; }
+
+    .quiz {
+      background: #020617e6;
+      border-radius: 12px;
+      border: 1px solid #1e293b;
+      padding: 12px 14px;
+      margin-top: 8px;
+    }
+    .quiz h3 { font-size: 1rem; margin-bottom: 6px; }
+    .quiz-q { margin-bottom: 8px; }
+    .quiz-q p { margin-bottom: 4px; }
+    .quiz-q label { display: block; font-size: 0.85rem; margin-left: 4px; }
+
+    .answer {
+      margin-top: 4px;
+      font-size: 0.8rem;
+      color: #a5b4fc;
+      display: none;
+    }
+
+    .btn-small {
+      margin-top: 4px;
+      padding: 4px 8px;
+      font-size: 0.75rem;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      background: #020617;
+      color: #e5e7eb;
+      cursor: pointer;
+    }
+    .btn-small:hover { background: #020617cc; }
+
+    @media (max-width: 800px) {
+      .page { flex-direction: column; }
+      .sidebar { position: relative; width: 100%; height: auto; display: flex; flex-wrap: wrap; gap: 6px; }
+      .nav-title { width: 100%; margin-top: 4px; }
+      .nav-link { display: inline-block; margin-right: 4px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <aside class="sidebar">
+    <div class="logo">CodeCafe <span>DB Lab</span></div>
+    <div class="tagline">Visual guide to SQL vs MongoDB</div>
+
+    <div class="nav-title">Chapters</div>
+    <ul class="nav-list">
+      <li><button class="nav-link active" onclick="showSection('why')">Why SQL vs MongoDB?</button></li>
+      <li><button class="nav-link" onclick="showSection('bill')">Bill Screen Story</button></li>
+      <li><button class="nav-link" onclick="showSection('compare')">Side‑by‑Side View</button></li>
+      <li><button class="nav-link" onclick="showSection('tools')">Atlas · Compass · Mongoose</button></li>
+      <li><button class="nav-link" onclick="showSection('quiz')">Mini Quiz</button></li>
+    </ul>
+  </aside>
+
+  <main class="content-wrap">
+    <header class="hero">
+      <div class="hero-main">
+        <h1>MongoDB vs SQL – Restaurant Edition</h1>
+        <p>Instead of theory first, we’ll design one simple screen: a food order bill. You’ll see where SQL hurts and where MongoDB feels natural.</p>
+        <div class="hero-badge-row">
+          <span class="badge">Target: MERN beginners</span>
+          <span class="badge">Theme: Restaurant</span>
+          <span class="badge">Focus: Embedding vs Tables</span>
+        </div>
+      </div>
+      <div class="hero-diagram">
+        <div class="hero-diagram-title">Big Picture</div>
+        <div class="diagram-cols">
+          <div class="diagram-box">
+            <div class="diagram-label">SQL</div>
+            <pre class="diagram-body">Customers
+Orders
+OrderItems
+Recipes
+Chefs
+(need JOINs)</pre>
+          </div>
+          <div class="diagram-box">
+            <div class="diagram-label">MongoDB</div>
+            <pre class="diagram-body">orders {
+  customer {...}
+  items   [...]
+}
+chefs {
+  recipes [...]
+}</pre>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- SECTION: WHY -->
+    <section id="why" class="section">
+      <h2><span class="icon">❓</span>Why do we even compare SQL and MongoDB?</h2>
+      <p>Think like an app developer, not a database engineer.</p>
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">SQL – Like strict Excel sheets</div>
+          <div class="card-sub">Great when rules never change.</div>
+          <ul style="font-size:0.85rem; margin-left:16px; color:#d1d5db;">
+            <li>Tables, rows, columns.</li>
+            <li>Perfect for banks, payroll, marks database.</li>
+            <li>Very strong rules (schema, constraints).</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">MongoDB – Like flexible Google Docs</div>
+          <div class="card-sub">Great when your app keeps evolving.</div>
+          <ul style="font-size:0.85rem; margin-left:16px; color:#d1d5db;">
+            <li>Stores JSON‑like documents.</li>
+            <li>Easy to store nested data (orders with items).</li>
+            <li>Add new fields any time, old data still works.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;" class="info-box">
+        <p><b>Rule of thumb for students:</b></p>
+        <ul style="font-size:0.9rem; margin-left:18px;">
+          <li>If your <b>UI screens are naturally JSON‑shaped</b> (like an order bill, user profile), MongoDB will usually feel simpler.</li>
+          <li>If your world is <b>reports and strict rules</b> (banking, accounting), SQL will usually fit better.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- SECTION: BILL STORY -->
+    <section id="bill" class="section" style="display:none;">
+      <h2><span class="icon">🧾</span>One Screen Story: The Bill</h2>
+      <p>We only design <b>one screen</b>: the order bill in a food app.</p>
+      <div class="pill-row">
+        <span class="pill">Customer: Alice</span>
+        <span class="pill">Items: Pizza ×2, Salad ×1</span>
+        <span class="pill">We need: name + items + total</span>
+      </div>
+
+      <h3 style="margin-top:10px;">1. SQL version – split across 3 tables</h3>
+      <pre><code>-- Customers
++----+----------+
+| id |  name    |
++----+----------+
+| 10 | Alice    |
++----+----------+
+
+-- Orders
++----+------------+-----------+
+| id | customerId | orderDate |
++----+------------+-----------+
+| 1  |    10      | 2025-12-08|
++----+------------+-----------+
+
+-- OrderItems
++---------+----------+-----+-------+
+| orderId | itemName | qty | price |
++---------+----------+-----+-------+
+|   1     | Pizza    |  2  |  8.99 |
+|   1     | Salad    |  1  |  5.99 |
++---------+----------+-----+-------+
+
+-- To draw ONE bill:
+SELECT c.name, oi.itemName, oi.qty, oi.price
+FROM Customers c
+JOIN Orders o ON c.id = o.customerId
+JOIN OrderItems oi ON o.id = oi.orderId
+WHERE o.id = 1;</code></pre>
+
+      <div class="warning-box" style="margin-top:8px;">
+        <p><b>For just one screen, beginners must learn:</b></p>
+        <ul style="margin-left:18px; font-size:0.85rem;">
+          <li>How foreign keys work (<code>customerId</code>, <code>orderId</code>).</li>
+          <li>How JOINs work (<code>Customers</code> ↔ <code>Orders</code> ↔ <code>OrderItems</code>).</li>
+        </ul>
+      </div>
+
+      <h3 style="margin-top:12px;">2. MongoDB version – one JSON document</h3>
+      <p>Now imagine we just save the bill exactly how the UI needs it.</p>
+      <pre><code>// One document in the &quot;orders&quot; collection
+{
+  _id: 1,
+  customer: {
+    id: 10,
+    name: &quot;Alice&quot;
+  },
+  orderDate: &quot;2025-12-08&quot;,
+  items: [
+    { name: &quot;Pizza&quot;,  qty: 2, price: 8.99 },
+    { name: &quot;Salad&quot;,  qty: 1, price: 5.99 }
+  ],
+  total: 23.97
+}</code></pre>
+
+      <div class="info-box" style="margin-top:8px;">
+        <p><b>To load the bill screen:</b></p>
+        <pre><code>db.orders.findOne({ _id: 1 })</code></pre>
+        <p>Done. One collection, one document, one query.</p>
+      </div>
+
+      <div class="tip-box" style="margin-top:8px;">
+        <p><b>Analogy:</b></p>
+        <ul style="margin-left:18px; font-size:0.85rem;">
+          <li><b>SQL:</b> Marks in 3 different notebooks (Math, Science, English). To show report, teacher opens all and combines.</li>
+          <li><b>MongoDB:</b> One report card that already has all subjects written together.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- SECTION: COMPARE -->
+    <section id="compare" class="section" style="display:none;">
+      <h2><span class="icon">⚖️</span>Visual Comparison: Tables vs Documents</h2>
+      <p>For the same restaurant, here is how a menu item and an order look in SQL vs MongoDB.</p>
+
+      <table class="compare-table">
+        <tr>
+          <th>Concept</th>
+          <th>SQL (Tables)</th>
+          <th>MongoDB (Documents)</th>
+        </tr>
+        <tr>
+          <td>Menu Item</td>
+          <td>
+            <label>Table: Menu</label>
+            <pre><code>+----+-------------------+-------+----------+
+| id | name              | price | category |
++----+-------------------+-------+----------+
+| 1  | Margherita Pizza  | 8.99  | Pizza    |
++----+-------------------+-------+----------+</code></pre>
+          </td>
+          <td>
+            <label>Collection: menu</label>
+            <pre><code>{
+  _id: 1,
+  name: &quot;Margherita Pizza&quot;,
+  price: 8.99,
+  category: &quot;Pizza&quot;,
+  toppings: [&quot;cheese&quot;, &quot;tomato&quot;]
+}</code></pre>
+          </td>
+        </tr>
+        <tr>
+          <td>Order</td>
+          <td>
+            <label>Tables: Orders + OrderItems</label>
+            <pre><code>// Orders
++----+----------+
+| id | customer |
++----+----------+
+| 1  | Alice    |
++----+----------+
+
+// OrderItems
++----------+---------+-----+
+| order_id | item_id | qty |
++----------+---------+-----+
+|    1     |    1    |  2  |
++----------+---------+-----+</code></pre>
+          </td>
+          <td>
+            <label>Collection: orders (with embedding)</label>
+            <pre><code>{
+  _id: 1,
+  customer: &quot;Alice&quot;,
+  items: [
+    { itemId: 1, name: &quot;Margherita Pizza&quot;, qty: 2 }
+  ],
+  status: &quot;Preparing&quot;
+}</code></pre>
+          </td>
+        </tr>
+      </table>
+
+      <div class="tip-box" style="margin-top:10px;">
+        <p><b>Key Visual:</b></p>
+        <ul style="margin-left:18px; font-size:0.9rem;">
+          <li>SQL = many small boxes (tables) + arrows between them (JOINs).</li>
+          <li>MongoDB = fewer, richer boxes (documents) that already contain what the screen needs.</li>
+        </ul>
+      </div>
+
+      <h3 style="margin-top:14px;">CRUD side‑by‑side (read like English)</h3>
+      <table class="compare-table">
+        <tr>
+          <th>Action</th>
+          <th>SQL</th>
+          <th>MongoDB</th>
+        </tr>
+        <tr>
+          <td><b>CREATE</b><br/>Add a new menu item</td>
+          <td><pre><code>INSERT INTO Menu (name, price, category)
+VALUES ('Pasta', 7.99, 'Main');</code></pre></td>
+          <td><pre><code>db.menu.insertOne({
+  name: &quot;Pasta&quot;,
+  price: 7.99,
+  category: &quot;Main&quot;
+})</code></pre></td>
+        </tr>
+        <tr>
+          <td><b>READ</b><br/>Get all pizzas</td>
+          <td><pre><code>SELECT * FROM Menu
+WHERE category = 'Pizza';</code></pre></td>
+          <td><pre><code>db.menu.find({ category: &quot;Pizza&quot; })</code></pre></td>
+        </tr>
+        <tr>
+          <td><b>UPDATE</b><br/>Change price of Pizza</td>
+          <td><pre><code>UPDATE Menu
+SET price = 9.99
+WHERE name = 'Pizza';</code></pre></td>
+          <td><pre><code>db.menu.updateOne(
+  { name: &quot;Pizza&quot; },
+  { $set: { price: 9.99 } }
+)</code></pre></td>
+        </tr>
+      </table>
+
+      <div class="info-box" style="margin-top:10px;">
+        <p><b>Read MongoDB like this:</b></p>
+        <ul style="margin-left:18px; font-size:0.9rem;">
+          <li><code>db.menu</code> → go to the <b>menu</b> collection.</li>
+          <li><code>.find({ category: &quot;Pizza&quot; })</code> → find all documents where category is Pizza.</li>
+          <li><code>updateOne(...)</code> → update the first matching document.</li>
+          <li><code>$set</code> → change only these specific fields.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- SECTION: TOOLS -->
+    <section id="tools" class="section" style="display:none;">
+      <h2><span class="icon">🧰</span>Atlas, Compass &amp; Mongoose</h2>
+      <p>These three tools make MongoDB very friendly for MERN learners.</p>
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">MongoDB Atlas</div>
+          <div class="card-sub">Cloud MongoDB (no install)</div>
+          <ul style="font-size:0.85rem; margin-left:16px; color:#d1d5db;">
+            <li>Create a free cluster.</li>
+            <li>Connect from anywhere (college, home).</li>
+            <li>Great for demos and projects.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">MongoDB Compass</div>
+          <div class="card-sub">Visual GUI for your data</div>
+          <ul style="font-size:0.85rem; margin-left:16px; color:#d1d5db;">
+            <li>See collections and documents like folders and files.</li>
+            <li>Run queries without writing code.</li>
+            <li>Perfect for understanding how embedding looks.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">Mongoose</div>
+          <div class="card-sub">Bridge between Node.js and MongoDB</div>
+          <ul style="font-size:0.85rem; margin-left:16px; color:#d1d5db;">
+            <li>Defines schemas in JavaScript.</li>
+            <li>Adds validation (required fields, types).</li>
+            <li>Makes queries feel like normal JS methods.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="info-box" style="margin-top:14px;">
+        <p><b>In a MERN app:</b></p>
+        <ul style="margin-left:18px; font-size:0.9rem;">
+          <li>Frontend (React) sends JSON → Backend (Express) receives JSON → MongoDB stores JSON‑like documents.</li>
+          <li>No “translation” headache between objects and tables.</li>
+        </ul>
+      </div>
+
+      <h3 style="margin-top:18px;">End‑to‑End Flow: From React to MongoDB</h3>
+      <p>Let’s follow <b>one new order</b> from the browser all the way to the database, step by step.</p>
+
+      <div class="pill-row">
+        <span class="pill">React form → shape the JSON</span>
+        <span class="pill">Express API → calculate total</span>
+        <span class="pill">Mongoose model → validate &amp; save</span>
+        <span class="pill">MongoDB → embedded document</span>
+      </div>
+
+      <h4 style="margin-top:10px;">1) React: build the order object</h4>
+      <pre><code>// React (frontend)
+import axios from 'axios';
+
+function placeOrder() {
+  const order = {
+    customer: { id: 10, name: 'Alice' },
+    items: [
+      { name: 'Pizza', qty: 2, price: 8.99 },
+      { name: 'Salad', qty: 1, price: 5.99 }
+    ]
+    // Notice: we are NOT sending total yet.
+  };
+
+  axios.post('http://localhost:3001/orders', order);
+}</code></pre>
+
+      <div class="tip-box" style="margin-top:6px;">
+        <p><b>Important:</b> The React object is already in the <b>embedded</b> structure we want:</p>
+        <ul style="margin-left:18px; font-size:0.85rem;">
+          <li><code>customer</code> is an object inside the order.</li>
+          <li><code>items</code> is an array of objects inside the order.</li>
+        </ul>
+      </div>
+
+      <h4 style="margin-top:10px;">2) Express: calculate the bill total</h4>
+      <pre><code>// Express (backend)
+app.post('/orders', async (req, res) =&gt; {
+  // 1. Read the JSON sent by React
+  const data = req.body;  // { customer: {...}, items: [...] }
+
+  // 2. Calculate the total on the server
+  const total = data.items.reduce((sum, item) =&gt; {
+    return sum + item.qty * item.price;
+  }, 0);
+
+  // 3. Create the final object to save (now includes total)
+  const orderToSave = {
+    customer: data.customer,
+    items: data.items,
+    total: total
+  };
+
+  // 4. Save using Mongoose (this will embed items inside the order document)
+  const newOrder = await Order.create(orderToSave);
+  res.json(newOrder);
+});</code></pre>
+
+      <div class="info-box" style="margin-top:6px;">
+        <p><b>Where did embedding happen?</b></p>
+        <ul style="margin-left:18px; font-size:0.9rem;">
+          <li>We passed one big object to <code>Order.create(orderToSave)</code>.</li>
+          <li>This object has <code>customer</code> (object) and <code>items</code> (array) inside it.</li>
+          <li>Mongoose + MongoDB store that <b>as one document</b> with embedded fields.</li>
+        </ul>
+      </div>
+
+      <h4 style="margin-top:10px;">3) Mongoose: schema that matches our JSON shape</h4>
+      <pre><code>// Mongoose model (Node.js)
+const mongoose = require('mongoose');
+
+const OrderSchema = new mongoose.Schema({
+  customer: {
+    id: Number,
+    name: String
+  },
+  orderDate: { type: Date, default: Date.now },
+  items: [{
+    name: String,
+    qty: Number,
+    price: Number
+  }],
+  total: Number
+});
+
+const Order = mongoose.model('Order', OrderSchema);</code></pre>
+
+      <div class="tip-box" style="margin-top:6px;">
+        <p><b>Visual:</b> This schema says:</p>
+        <ul style="margin-left:18px; font-size:0.85rem;">
+          <li>"Inside each order document, there is a <code>customer</code> object".</li>
+          <li>"Inside each order document, there is an array <code>items</code>, and each item has name, qty, price".</li>
+        </ul>
+      </div>
+
+      <h4 style="margin-top:10px;">4) MongoDB: final embedded document in the collection</h4>
+      <pre><code>// In the "orders" collection in MongoDB
+{
+  _id: ObjectId("..."),
+  customer: { id: 10, name: "Alice" },
+  orderDate: ISODate("2025-12-08T10:00:00Z"),
+  items: [
+    { name: "Pizza",  qty: 2, price: 8.99 },
+    { name: "Salad",  qty: 1, price: 5.99 }
+  ],
+  total: 23.97
+}</code></pre>
+
+      <div class="tip-box" style="margin-top:10px;">
+        <p><b>Notice the journey:</b></p>
+        <ul style="margin-left:18px; font-size:0.9rem;">
+          <li>React order object → sent as JSON.</li>
+          <li>Express adds <code>total</code> and creates <code>orderToSave</code>.</li>
+          <li>Mongoose schema describes the embedded structure.</li>
+          <li>MongoDB stores exactly that structure in one <b>embedded document</b>.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- SECTION: QUIZ -->
+    <section id="quiz" class="section" style="display:none;">
+      <h2><span class="icon">📝</span>Mini Quiz</h2>
+      <p>Check if the main ideas are clear. Discuss answers with your friends.</p>
+
+      <div class="quiz">
+        <h3>1. Embedding idea</h3>
+        <div class="quiz-q">
+          <p>For an order bill screen, what should be embedded inside the order document?</p>
+          <label>✅ a) The list of items (name, qty, price).</label>
+          <label>⬜ b) All chefs in the restaurant.</label>
+          <label>⬜ c) Every recipe ever created.</label>
+          <button class="btn-small" onclick="toggleAnswer('a1')">Show explanation</button>
+          <div id="a1" class="answer">We always read the items with the bill → perfect case for embedding inside the order.</div>
+        </div>
+
+        <h3>2. SQL pain vs MongoDB comfort</h3>
+        <div class="quiz-q">
+          <p>Why can MongoDB be simpler than SQL for the bill screen?</p>
+          <label>✅ a) One document already has customer + items + total.</label>
+          <label>⬜ b) Because MongoDB does not use JSON.</label>
+          <label>⬜ c) Because SQL cannot store prices.</label>
+          <button class="btn-small" onclick="toggleAnswer('a2')">Show explanation</button>
+          <div id="a2" class="answer">The bill UI is JSON‑shaped, so a single MongoDB document maps almost 1‑to‑1 to the screen.</div>
+        </div>
+
+        <h3>3. Query language</h3>
+        <div class="quiz-q">
+          <p>Which one is a correct MongoDB query to get all pizzas?</p>
+          <label>⬜ a) <code>SELECT * FROM Menu WHERE category = 'Pizza';</code></label>
+          <label>✅ b) <code>db.menu.find({ category: "Pizza" })</code></label>
+          <button class="btn-small" onclick="toggleAnswer('a3')">Show explanation</button>
+          <div id="a3" class="answer">Option (b) uses the MongoDB style: <code>db.&lt;collection&gt;.find(&lt;filter&gt;)</code>.</div>
+        </div>
+
+        <h3>4. Flexibility</h3>
+        <div class="quiz-q">
+          <p>You decide to add <code>couponCode</code> to some orders. What must you do in MongoDB?</p>
+          <label>⬜ a) Run an <code>ALTER TABLE</code> first.</label>
+          <label>✅ b) Just start saving <code>couponCode</code> in new documents.</label>
+          <button class="btn-small" onclick="toggleAnswer('a4')">Show explanation</button>
+          <div id="a4" class="answer">MongoDB schema is flexible. Old documents can stay as they are; new ones can have extra fields.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+  function showSection(id) {
+    document.querySelectorAll('.section').forEach(sec => {
+      sec.style.display = (sec.id === id) ? 'block' : 'none';
+    });
+    document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
+    const found = Array.from(document.querySelectorAll('.nav-link')).find(b => b.textContent.includes('Why SQL') && id==='why')
+      || Array.from(document.querySelectorAll('.nav-link')).find(b => b.textContent.includes('Bill') && id==='bill')
+      || Array.from(document.querySelectorAll('.nav-link')).find(b => b.textContent.includes('Side‑by‑Side') && id==='compare')
+      || Array.from(document.querySelectorAll('.nav-link')).find(b => b.textContent.includes('Atlas') && id==='tools')
+      || Array.from(document.querySelectorAll('.nav-link')).find(b => b.textContent.includes('Mini Quiz') && id==='quiz');
+    if (found) found.classList.add('active');
+  }
+  function toggleAnswer(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+  }
+</script>
+</body>
+</html>
