@@ -26,8 +26,9 @@ function App() {
           Edit <code>src/App.jsx</code> and save to test HMR
         </p>
       </div>
-      <Counter />
-      <Counter name="Second"></Counter>
+      <Counter name="first" describe="My first component and it's first instance"/>
+      <Counter name="Second" describe="My first component and it's second instance"></Counter>
+      <Counter></Counter>
       <p className="read-the-docs">
         Click on the Vite and React logos to learn more
       </p>
