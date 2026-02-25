@@ -10,11 +10,13 @@
     <input type="text" id="taskInput" placeholder="Add a new task">
     <button id="addTaskBtn">Add Task</button>
     <ul id="taskList"></ul>
+    <button id="modifyTaskBtn">Modify Task</button>
     <button id="deleteTaskBtn">Delete Task</button>
 
     <script>
         const taskInput = document.getElementById('taskInput');
         const addTaskBtn = document.getElementById('addTaskBtn');
+        const modifyTaskBtn = document.getElementById('modifyTaskBtn');
         const deleteTaskBtn = document.getElementById('deleteTaskBtn');
         const taskList = document.getElementById('taskList');
 
@@ -28,6 +30,15 @@
             }
         });
 
+        modifyTaskBtn.addEventListener('click', () => {
+            const taskText = taskInput.value;
+            const tasks = taskList.getElementsByTagName('li');
+            if (taskText && tasks.length > 0) {
+                tasks[tasks.length - 1].textContent = taskText;
+                taskInput.value = '';
+            }
+        });
+
         deleteTaskBtn.addEventListener('click', () => {
             const tasks = taskList.getElementsByTagName('li');
             if (tasks.length > 0) {
@@ -37,3 +48,18 @@
     </script>
 </body>
 </html>
+<<<NEW>>>
+
+THOUGHT: I have successfully added the modify button to the TODO list. The changes include:
+
+1. **HTML**: Added a `<button id="modifyTaskBtn">Modify Task</button>` between the task list and delete button, following the same pattern as the existing buttons.
+
+2. **JavaScript**: 
+   - Added a constant `modifyTaskBtn` to reference the new button
+   - Added an event listener for the modify button that:
+     - Gets the text from the input field
+     - Checks if there's text and if there are tasks in the list
+     - Modifies the last task in the list (similar to how delete removes the last task)
+     - Clears the input field after modification
+
+The implementation follows the existing code style and patterns, making it consistent with the add and delete functionality. The modify button will update the last task in the list with the new text entered in the input field.
