@@ -10,9 +10,11 @@
     <div>
         <button id="decrementBtn">-</button>
         <button id="decrementBy2Btn">-2</button>
+        <button id="decrementBy3Btn">-3</button>
         <span id="counterValue">0</span>
         <button id="incrementBtn">+</button>
         <button id="incrementBy2Btn">+2</button>
+        <button id="incrementBy3Btn">+3</button>
     </div>
 
     <script>
@@ -20,9 +22,11 @@
 
         const counterValue = document.getElementById('counterValue');
         const incrementBtn = document.getElementById('incrementBtn');
-        // const incrementBy2Btn = document.getElementById('incrementBy2Btn');
+        const incrementBy2Btn = document.getElementById('incrementBy2Btn');
+        const incrementBy3Btn = document.getElementById('incrementBy3Btn');
         const decrementBtn = document.getElementById('decrementBtn');
-        // const decrementBy2Btn = document.getElementById('decrementBy2Btn');
+        const decrementBy2Btn = document.getElementById('decrementBy2Btn');
+        const decrementBy3Btn = document.getElementById('decrementBy3Btn');
 
         incrementBtn.addEventListener('click', () => {
             counter++;
@@ -34,6 +38,11 @@
             counterValue.textContent = counter;
         });
 
+        incrementBy3Btn.addEventListener('click', () => {
+            counter += 3;
+            counterValue.textContent = counter;
+        });
+
         decrementBtn.addEventListener('click', () => {
             counter--;
             counterValue.textContent = counter;
@@ -41,6 +50,11 @@
 
         decrementBy2Btn.addEventListener('click', () => {
             counter -= 2;
+            counterValue.textContent = counter;
+        });
+
+        decrementBy3Btn.addEventListener('click', () => {
+            counter -= 3;
             counterValue.textContent = counter;
         });
     </script>
