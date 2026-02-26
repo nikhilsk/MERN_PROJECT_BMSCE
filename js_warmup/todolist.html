@@ -10,11 +10,13 @@
     <input type="text" id="taskInput" placeholder="Add a new task">
     <button id="addTaskBtn">Add Task</button>
     <ul id="taskList"></ul>
+    <button id="modifyTaskBtn">Modify Task</button>
     <button id="deleteTaskBtn">Delete Task</button>
 
     <script>
         const taskInput = document.getElementById('taskInput');
         const addTaskBtn = document.getElementById('addTaskBtn');
+        const modifyTaskBtn = document.getElementById('modifyTaskBtn');
         const deleteTaskBtn = document.getElementById('deleteTaskBtn');
         const taskList = document.getElementById('taskList');
 
@@ -24,6 +26,15 @@
                 const li = document.createElement('li');
                 li.textContent = taskText;
                 taskList.appendChild(li);
+                taskInput.value = '';
+            }
+        });
+
+        modifyTaskBtn.addEventListener('click', () => {
+            const tasks = taskList.getElementsByTagName('li');
+            const taskText = taskInput.value;
+            if (tasks.length > 0 && taskText) {
+                tasks[tasks.length - 1].textContent = taskText;
                 taskInput.value = '';
             }
         });
